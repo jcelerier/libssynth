@@ -2,8 +2,12 @@
 #include <ssynth/Parser/Preprocessor.h>
 
 #include <QRandomGenerator>
-#include <QRegExp>
 #include <QStringList>
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QRegExp>
+#endif
+
 
 #include <map>
 namespace ssynth
@@ -15,11 +19,13 @@ namespace Parser
 
 auto Preprocessor::Process(const QString& input, int seed) -> QString
 {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
   QRandomGenerator rg(seed);
 
   QStringList in = input.split(QRegExp("\r\n|\r|\n"));
 
   std::map<QString, QString> substitutions;
+
   QRegExp ppCommand("^#"); // Look for #define varname value
   QRegExp defineCommand(
       R"(^#define\s([^\s]+)\s(.*)*$)"); // Look for #define varname value
@@ -172,6 +178,9 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
 
   QStringList out = in;
   return out.join("\r\n");
+#else
+  return {};
+#endif
 }
 }
 }

@@ -2,6 +2,10 @@
 
 #include <QStringList>
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <QRegExp>
+#endif
+
 namespace ssynth::Parser
 {
 
@@ -120,6 +124,7 @@ Tokenizer::Tokenizer(QString input)
         input.at(i) == '{' || input.at(i) == '}' || input.at(i) == ' '
         || (input.at(i) == '\r') || (input.at(i) == '\n'))
     {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
       QString trimmed = current.remove(QRegExp(R"(\s|\r|\n)"));
       if (!current.trimmed().isEmpty())
       {
@@ -133,6 +138,7 @@ Tokenizer::Tokenizer(QString input)
       }
       current = "";
       startPos = i;
+#endif
     }
     else
     {
