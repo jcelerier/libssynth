@@ -15,6 +15,8 @@
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QRegExp>
+#else
+#include <QtCore5Compat/QRegExp>
 #endif
 
 namespace ssynth
@@ -182,7 +184,6 @@ auto RuleSet::resolveNames() -> QStringList
         }
         else
         {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
           // The Polygons rules (i.e. Triangle[x,y,z]) are special rules, each created on the fly.
           QRegExp r("triangle\\[(.*)\\]");
           if (r.exactMatch(name))
@@ -233,7 +234,6 @@ auto RuleSet::resolveNames() -> QStringList
           {
             throw Exception(QString("Unable to resolve rule: %1").arg(name));
           }
-#endif
         }
       }
       if (dynamic_cast<PrimitiveRule*>(map[name]))

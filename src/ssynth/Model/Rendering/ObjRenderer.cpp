@@ -270,7 +270,6 @@ void ObjRenderer::drawMesh(
     Math::Vector3f u2,
     PrimitiveClass* classID)
 {
-
   setClass(classID->name, rgb, alpha);
   ObjGroup group;
   Vector3f v3 = endBase - O;
@@ -384,14 +383,14 @@ void ObjRenderer::writeToStream(QTextStream& ts)
     ts << "usemtl " << o.groupName << Qt::endl;
 
     // Vertices
-    for(Vector3f v : o.vertices)
+    for (Vector3f v : o.vertices)
     {
       ts << "v " << QString::number(v.x()) << " " << QString::number(v.y()) << " "
          << QString::number(v.z()) << " " << Qt::endl;
     }
 
     // Normals
-    for(Vector3f v : o.normals)
+    for (Vector3f v : o.normals)
     {
       ts << "vn " << QString::number(v.x()) << " " << QString::number(v.y()) << " "
          << QString::number(v.z()) << " " << Qt::endl;

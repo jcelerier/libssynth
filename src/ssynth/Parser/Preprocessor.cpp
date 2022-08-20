@@ -6,8 +6,10 @@
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #include <QRegExp>
+#else
+#include <QtCore5Compat/QRegExp>
 #endif
-
+#include <QRegularExpression>
 
 #include <map>
 namespace ssynth
@@ -19,10 +21,9 @@ namespace Parser
 
 auto Preprocessor::Process(const QString& input, int seed) -> QString
 {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
   QRandomGenerator rg(seed);
 
-  QStringList in = input.split(QRegExp("\r\n|\r|\n"));
+  QStringList in = input.split(QRegularExpression("\r\n|\r|\n"));
 
   std::map<QString, QString> substitutions;
 
@@ -135,7 +136,7 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
       }
       else
       {
-        WARNING("Could not understand preprocessor command: " + *it);
+        WARNING("Could not understand preprocessor command: " + it);
       }
     }
     else
@@ -178,9 +179,6 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
 
   QStringList out = in;
   return out.join("\r\n");
-#else
-  return {};
-#endif
 }
 }
 }
