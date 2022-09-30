@@ -8,16 +8,11 @@
 #include <ssynth/Model/RuleSet.h>
 #include <ssynth/Vector3.h>
 
+#include <QRegularExpression>
 #include <QStringList>
 
 #include <map>
 #include <typeinfo>
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QRegExp>
-#else
-#include <QtCore5Compat/QRegExp>
-#endif
 
 namespace ssynth
 {
@@ -185,13 +180,14 @@ auto RuleSet::resolveNames() -> QStringList
         else
         {
           // The Polygons rules (i.e. Triangle[x,y,z]) are special rules, each created on the fly.
-          QRegExp r("triangle\\[(.*)\\]");
-          if (r.exactMatch(name))
+          QRegularExpression r(
+              QRegularExpression::anchoredPattern("triangle\\[(.*)\\]"));
+          if (auto rmatch = r.match(name); rmatch.hasMatch())
           {
             // Check the arguments.
-            INFO("Found:" + r.cap(1));
+            INFO("Found:" + rmatch.captured(1));
             std::vector<Vector3f> v;
-            QStringList l = r.cap(1).split(";");
+            QStringList l = rmatch.captured(1).split(";");
             if (l.size() != 3)
             {
               throw Exception(QString("Unable to parse Triangle definition - must be "

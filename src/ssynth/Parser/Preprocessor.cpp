@@ -2,14 +2,8 @@
 #include <ssynth/Parser/Preprocessor.h>
 
 #include <QRandomGenerator>
-#include <QStringList>
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QRegExp>
-#else
-#include <QtCore5Compat/QRegExp>
-#endif
 #include <QRegularExpression>
+#include <QStringList>
 
 #include <map>
 namespace ssynth
@@ -27,37 +21,38 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
 
   std::map<QString, QString> substitutions;
 
-  QRegExp ppCommand("^#"); // Look for #define varname value
-  QRegExp defineCommand(
+  QRegularExpression defineCommand(
       R"(^#define\s([^\s]+)\s(.*)*$)"); // Look for #define varname value
-  QRegExp defineFloatCommand(
+  QRegularExpression defineFloatCommand(
       R"(^#define\s([^\s]+)\s(.*)\s\(float:([^\s]*)\)$)"); // Look for #define varname value
-  QRegExp defineIntCommand(
+  QRegularExpression defineIntCommand(
       R"(^#define\s([^\s]+)\s(.*)\s\(int:([^\s]*)\)$)"); // Look for #define varname value
 
   // Match a number: [-+]?[0-9]*\.?[0-9]+
-  QRegExp randomNumber(
+  QRegularExpression randomNumber(
       R"(random\[([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\])"); // random[-2.3,3.4]
 
-  for (auto& it : in)
+  for (QString& it : in)
   {
-
-    if (ppCommand.indexIn(it) != -1)
+    if (it.startsWith("#"))
     {
       // Preprocessor command
+      const auto defineMatches = defineCommand.match(it);
+      const auto defineFloatMatches = defineFloatCommand.match(it);
+      const auto defineIntMatches = defineIntCommand.match(it);
 
-      if (defineFloatCommand.indexIn(it) != -1)
+      if (defineFloatMatches.hasMatch())
       {
         //INFO(QString("Found ppC (%1)->(%2): ").arg(defineCommandWithGUI.cap(1)).arg(defineCommandWithGUI.cap(2)) + *it);
-        if (defineFloatCommand.cap(2).contains(defineFloatCommand.cap(1)))
+        if (defineFloatMatches.captured(2).contains(defineFloatMatches.captured(1)))
         {
           WARNING(QString("#define command is recursive - skipped: %1 -> %2")
-                      .arg(defineFloatCommand.cap(1))
-                      .arg(defineFloatCommand.cap(2)));
+                      .arg(defineFloatMatches.captured(1))
+                      .arg(defineFloatMatches.captured(2)));
         }
         //substitutions[defineCommandWithGUI.cap(1)] = defineCommandWithGUI.cap(2);
-        QString defaultValue = defineFloatCommand.cap(2);
-        QString floatInterval = defineFloatCommand.cap(3);
+        QString defaultValue = defineFloatMatches.captured(2);
+        QString floatInterval = defineFloatMatches.captured(3);
         QStringList fi = floatInterval.split("-");
         if (fi.size() != 2)
         {
@@ -75,28 +70,28 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
           continue;
         }
         bool succes3 = false;
-        double d3 = defineFloatCommand.cap(2).toDouble(&succes3);
+        double d3 = defineFloatMatches.captured(2).toDouble(&succes3);
         if (!succes3)
         {
           WARNING(
               "Could not parse default argument in #define gui command: "
-              + defineFloatCommand.cap(2));
+              + defineFloatMatches.captured(2));
           continue;
         }
-        auto* fp = new FloatParameter(defineFloatCommand.cap(1), d1, d2, d3);
+        auto* fp = new FloatParameter(defineFloatMatches.captured(1), d1, d2, d3);
         params.push_back(fp);
       }
-      else if (defineIntCommand.indexIn(it) != -1)
+      else if (defineIntMatches.hasMatch())
       {
         INFO("INT");
-        if (defineIntCommand.cap(2).contains(defineIntCommand.cap(1)))
+        if (defineIntMatches.captured(2).contains(defineIntMatches.captured(1)))
         {
           WARNING(QString("#define command is recursive - skipped: %1 -> %2")
-                      .arg(defineIntCommand.cap(1))
-                      .arg(defineIntCommand.cap(2)));
+                      .arg(defineIntMatches.captured(1))
+                      .arg(defineIntMatches.captured(2)));
         }
-        QString defaultValue = defineIntCommand.cap(2);
-        QString intInterval = defineIntCommand.cap(3);
+        QString defaultValue = defineIntMatches.captured(2);
+        QString intInterval = defineIntMatches.captured(3);
         QStringList ii = intInterval.split("-");
         if (ii.size() != 2)
         {
@@ -113,26 +108,26 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
           continue;
         }
         bool succes3 = false;
-        int i3 = defineIntCommand.cap(2).toInt(&succes3);
+        int i3 = defineIntMatches.captured(2).toInt(&succes3);
         if (!succes3)
         {
           WARNING(
               "Could not parse default argument in #define gui command: "
-              + defineIntCommand.cap(2));
+              + defineIntMatches.captured(2));
           continue;
         }
-        auto* fp = new IntParameter(defineIntCommand.cap(1), i1, i2, i3);
+        auto* fp = new IntParameter(defineIntMatches.captured(1), i1, i2, i3);
         params.push_back(fp);
       }
-      else if (defineCommand.indexIn(it) != -1)
+      else if (defineMatches.hasMatch())
       {
-        if (defineCommand.cap(2).contains(defineCommand.cap(1)))
+        if (defineMatches.captured(2).contains(defineMatches.captured(1)))
         {
           WARNING(QString("#define command is recursive - skipped: %1 -> %2")
-                      .arg(defineCommand.cap(1))
-                      .arg(defineCommand.cap(2)));
+                      .arg(defineMatches.captured(1))
+                      .arg(defineMatches.captured(2)));
         }
-        substitutions[defineCommand.cap(1)] = defineCommand.cap(2);
+        substitutions[defineMatches.captured(1)] = defineMatches.captured(2);
       }
       else
       {
@@ -167,13 +162,15 @@ auto Preprocessor::Process(const QString& input, int seed) -> QString
       }
     }
 
-    while (randomNumber.indexIn(it) != -1)
+    auto randNumMatches = randomNumber.globalMatch(it);
+    while (randNumMatches.hasNext())
     {
-      double d1 = randomNumber.cap(1).toDouble();
-      double d2 = randomNumber.cap(2).toDouble();
+      auto randNumMatch = randNumMatches.next();
+      double d1 = randNumMatch.captured(1).toDouble();
+      double d2 = randNumMatch.captured(2).toDouble();
       double r = rg.generateDouble() * (d2 - d1) + d1;
       INFO(QString("Random number: %1 -> %2 ").arg(randomNumber.cap(0)).arg(r));
-      it.replace(randomNumber.cap(0), QString::number(r));
+      it.replace(randNumMatch.captured(0), QString::number(r));
     }
   }
 

@@ -1,14 +1,7 @@
 #include <ssynth/Parser/Tokenizer.h>
 
-#include <QStringList>
-
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-#include <QRegExp>
-#else
-#include <QtCore5Compat/QRegExp>
-#endif
-
 #include <QRegularExpression>
+#include <QStringList>
 namespace ssynth::Parser
 {
 
