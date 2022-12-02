@@ -16,13 +16,14 @@ class GuiParameter
 public:
   GuiParameter(QString name)
       : name(name){};
+  virtual ~GuiParameter() = default;
   virtual QString getName() { return name; }
 
 protected:
   QString name;
 };
 
-class FloatParameter : public GuiParameter
+class FloatParameter final : public GuiParameter
 {
 public:
   FloatParameter(QString name, double from, double to, double defaultValue)
@@ -41,7 +42,7 @@ private:
   double defaultValue;
 };
 
-class IntParameter : public GuiParameter
+class IntParameter final : public GuiParameter
 {
 public:
   IntParameter(QString name, int from, int to, int defaultValue)
@@ -66,7 +67,7 @@ class Preprocessor
 {
 
 public:
-  Preprocessor(){};
+  Preprocessor() = default;
 
   // The preprocess replaces 'random[2,4]' statements with random numbers.
   // This requires a seed. Using the same seed as controls the EisenScript is probably the best idea her.
