@@ -11,9 +11,9 @@
 // #include <ssynth/Matrix4.h>
 // #include <ssynth/GLEngine/EngineWidget.h>
 
-struct QProgressDialog
+struct ProgressDialog
 {
-  QProgressDialog(auto&&...) { }
+  ProgressDialog(auto&&...) { }
   void setValue(int) { }
   void setLabelText(QString) { }
   bool wasCanceled() const noexcept { return false; }
@@ -50,12 +50,12 @@ public:
 
 private:
   void recurseBreadthFirst(
-      QProgressDialog& progressDialog,
+      ProgressDialog& progressDialog,
       int& maxTerminated,
       int& minTerminated,
       int& generationCounter);
   void recurseDepthFirst(
-      QProgressDialog& progressDialog,
+      ProgressDialog& progressDialog,
       int& maxTerminated,
       int& minTerminated,
       int& generationCounter);

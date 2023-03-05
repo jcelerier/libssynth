@@ -35,7 +35,7 @@ Builder::Builder(Rendering::Renderer* renderTarget, RuleSet* ruleSet, bool verbo
     , colorPool{new ColorPool("RandomHue")} {};
 
 void Builder::recurseDepthFirst(
-    QProgressDialog& progressDialog,
+    ProgressDialog& progressDialog,
     int& maxTerminated,
     int& minTerminated,
     int& generationCounter)
@@ -132,7 +132,7 @@ void Builder::recurseDepthFirst(
 }
 
 void Builder::recurseBreadthFirst(
-    QProgressDialog& progressDialog,
+    ProgressDialog& progressDialog,
     int& maxTerminated,
     int& minTerminated,
     int& generationCounter)
@@ -248,7 +248,7 @@ void Builder::build()
   stack.push_back(RuleState(ruleSet->getStartRule(), State()));
   int generationCounter = 0;
 
-  QProgressDialog progressDialog("Building objects...", "Cancel", 0, 100, 0);
+  ProgressDialog progressDialog("Building objects...", "Cancel", 0, 100, 0);
   progressDialog.setWindowModality(Qt::WindowModal);
   if (verbose)
   {
