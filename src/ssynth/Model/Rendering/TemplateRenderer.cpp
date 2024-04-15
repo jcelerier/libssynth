@@ -10,8 +10,12 @@
 #include <QFileInfo>
 #include <QIODevice>
 
+#if __has_include(<ossia/detail/fmt.hpp>)
+#include <ossia/detail/fmt.hpp>
+#else
 #define FMT_HEADER_ONLY 1
 #include <fmt/format.h>
+#endif
 
 #include <map>
 
