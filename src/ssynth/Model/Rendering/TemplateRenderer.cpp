@@ -35,27 +35,42 @@ static QString getAlternateId(PrimitiveClass* classID)
   else
     return QString{};
 }
-
-void Template::read(const QString& xml)
+static void readDomDocument(QDomDocument& doc, auto&& input, QString type)
 {
-  QDomDocument doc;
-
+  #if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
   QString errorMessage;
   int errorLine = 0;
   int errorColumn = 0;
 
-  if (!doc.setContent(xml, false, &errorMessage, &errorLine, &errorColumn))
+  if (!doc.setContent(input, false, &errorMessage, &errorLine, &errorColumn))
   {
     QString error = QString("[Line %1, Col %2] %3")
                         .arg(errorLine)
                         .arg(errorColumn)
                         .arg(errorMessage);
-    WARNING("Unable to parse xml: " + error);
+    WARNING("Unable to parse " + type + ": " + error);
 
-    throw Exception("Unable to parse xml from string: " + error);
-
-    return;
+    throw Exception("Unable to parse " + type + ": " + error);
   }
+  #else
+  if (auto res = doc.setContent(input); !res)
+  {
+    QString error = QString("[Line %1, Col %2] %3")
+                        .arg(res.errorLine)
+                        .arg(res.errorColumn)
+                        .arg(res.errorMessage);
+    WARNING("Unable to parse " + type + ": " + error);
+
+    throw Exception("Unable to parse " + type + ": " + error);
+  }
+  #endif
+}
+
+void Template::read(const QString& xml)
+{
+  QDomDocument doc;
+
+  readDomDocument(doc, xml, "xml");
 
   fullText = doc.toString();
 
@@ -63,32 +78,23 @@ void Template::read(const QString& xml)
 }
 
 void Template::read(QFile& file)
+try
 {
   QDomDocument doc;
   if (!file.open(QIODevice::ReadOnly))
   {
     throw Exception("Unable to open file: " + QFileInfo(file).absoluteFilePath());
   }
-  QString errorMessage;
-  int errorLine = 0;
-  int errorColumn = 0;
+  
+  readDomDocument(doc, &file, QString("file (%1)").arg(QFileInfo(file).absoluteFilePath()));
 
-  if (!doc.setContent(&file, false, &errorMessage, &errorLine, &errorColumn))
-  {
-    file.close();
-    QString error = QString("[Line %1, Col %2] %3")
-                        .arg(errorLine)
-                        .arg(errorColumn)
-                        .arg(errorMessage);
-
-    throw Exception(
-        "Unable to parse file: " + error
-        + " in file: " + QFileInfo(file).absoluteFilePath());
-  }
   file.close();
 
   fullText = doc.toString();
   parse(doc);
+} catch(...) {
+  file.close();
+  throw;
 }
 
 void Template::parse(QDomDocument& doc)
